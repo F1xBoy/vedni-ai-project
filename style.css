@@ -1,0 +1,124 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #121214;
+    color: #e1e1e6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: #202024;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid #29292e;
+}
+
+h1 {
+    font-size: 24px;
+    margin-top: 0;
+    color: #04d361;
+    text-align: center;
+}
+
+.subtitle {
+    color: #a8a8b3;
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #c4c4cc;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #29292e;
+    border-radius: 6px;
+    background-color: #121214;
+    color: #fff;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    border-color: #04d361;
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background-color: #04d361;
+    color: #0d0d0d;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover {
+    background-color: #00b34d;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.response-box {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #121214;
+    border-radius: 6px;
+    border: 1px solid #29292e;
+    min-height: 80px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.placeholder {
+    color: #7c7c8a;
+    text-align: center;
+    font-style: italic;
+    padding-top: 20px;
+}
+
+.loading {
+    color: #ffcd1e;
+    text-align: center;
+    animation: blink 1.5s infinite;
+}
+
+.error {
+    color: #f75a68;
+    font-weight: bold;
+}
+
+.answer {
+    color: #e1e1e6;
+    white-space: pre-wrap;
+}
+
+@keyframes blink {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}

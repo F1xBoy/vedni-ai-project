@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vedni AI</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Vedni AI</h1>
+        <p class="subtitle">Vedni – это ИИ, и он может ошибаться.</p>
+        
+        <div class="input-group">
+            <label for="question">Ваш вопрос:</label>
+            <input type="text" id="question" placeholder="Введите ваш запрос..." value="Что такое искусственный интеллект?">
+        </div>
+
+        <div class="checkbox-group" style="margin-bottom: 20px;">
+            <input type="checkbox" id="web-search" checked>
+            <label for="web-search" style="cursor: pointer; font-size: 14px; user-select: none;"> Искать в сети (Википедия)</label>
+        </div>
+
+        <button id="send-btn">Отправить</button>
+
+        <div class="response-box" id="response-box">
+            <div class="placeholder">Ответ появится здесь...</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('send-btn').addEventListener('click', async () => {
+            const question = document.getElementById('question').value.trim();
+            const webSearch = document.getElementById('web-search').checked;
+            const responseBox = document.getElementById('response-box');
+
+            if (!question) {
+                alert('Введите ваш вопрос!');
+                return;
+            }
+
+            responseBox.innerHTML = '<div class="loading">Генерирую ответ...</div>';
+
+            try {
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, web_search: webSearch })
+                });
+                const data = await res.json();
+                
+                if (data.error) {
+                    responseBox.innerHTML = `<div class="error">${data.error}</div>`;
+                } else {
+                    responseBox.innerHTML = `<div class="answer">${data.answer}</div>`;
+                }
+            } catch (err) {
+                responseBox.innerHTML = '<div class="error">Ошибка сервера! Проверьте деплой на Vercel.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
