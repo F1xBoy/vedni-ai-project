@@ -28,67 +28,44 @@ def ask():
     data = request.json
     question = data.get('question', '')
     web_search = data.get('web_search', False)
-
-    if not question:
-        return jsonify({'answer': 'Введите ваш вопрос!'})
-
-    # Достаем API ключ из переменных окружения Vercel
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-    if not GROQ_API_KEY:
-        return jsonify({'error': 'Критическая ошибка: Не настроен GROQ_API_KEY в Vercel!'}), 500
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
 
     try:
+        # Логика поиска в Вики
         if web_search:
-            # 1. Просим ИИ вырезать ключевое слово для Википедии
-            extract_prompt = (
-                f"Извлеки из этого вопроса ОДНО или ДВА главных слова для поиска статьи в Википедии. "
-                f"Ответь ТОЛЬКО этим ключевым словом в именительном падеже, без знаков препинания, кавычек и пояснений.\n"
-                f"Вопрос: {question}"
-            )
-            
-            headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-            payload = {
-                "model": "llama3-8b-8192",
-                "messages": [{"role": "user", "content": extract_prompt}]
-            }
+            extract_prompt = f"Извлеки ключевое слово для поиска. Вопрос: {question}. Ответь ТОЛЬКО одним словом."
+            payload = {"model": "llama3-8b-8192", "messages": [{"role": "user", "content": extract_prompt}]}
             
             res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
-            res_data = res.json()
             
-            if "choices" in res_data:
-                topic = res_data["choices"][0]["message"]["content"].strip().replace('"', '').replace('.', '')
-            else:
-                topic = question
-
-            # 2. Поиск в Википедии
+            # --- ВАЖНАЯ ПРОВЕРКА ---
+            if res.status_code != 200:
+                return jsonify({'error': f'Ошибка Groq (поиск): {res.text}'}), 500
+            
+            res_data = res.json()
+            topic = res_data["choices"][0]["message"]["content"].strip().replace('"', '').replace('.', '')
+            
+            wiki = wikipediaapi.Wikipedia('MyAIWebBot/1.0', 'ru')
             page = wiki.page(topic)
-
-            if page.exists():
-                wiki_text = page.summary[0:2000]
-                prompt = f"Информация из Википедии:\n{wiki_text}\n\nВопрос пользователя: {question}\nОтветь на русском языке, опираясь на факты выше."
-            else:
-                prompt = f"Пользователь спросил: {question}. Ответь на русском языке, так как статья '{topic}' не найдена в Википедии."
+            wiki_text = page.summary[0:2000] if page.exists() else "Инфо не найдено."
+            prompt = f"Вики: {wiki_text}\nВопрос: {question}"
         else:
             prompt = question
 
-        # 3. Финальный запрос к облачной Llama 3
-        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-        payload = {
-            "model": "llama3-8b-8192",
-            "messages": [{"role": "user", "content": prompt}]
-        }
-        
+        # Финальный запрос
+        payload = {"model": "llama3-8b-8192", "messages": [{"role": "user", "content": prompt}]}
         final_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
+
+        # --- ВАЖНАЯ ПРОВЕРКА ---
+        if final_res.status_code != 200:
+            return jsonify({'error': f'Ошибка Groq (генерация): {final_res.text}'}), 500
+
         final_data = final_res.json()
-        
-        if "choices" in final_data:
-            answer = final_data["choices"][0]["message"]["content"]
-            return jsonify({'answer': answer})
-        else:
-            return jsonify({'error': 'Ошибка при ответе модели от Groq Cloud.'}), 500
+        answer = final_data["choices"][0]["message"]["content"]
+        return jsonify({'answer': answer})
 
     except Exception as e:
-        return jsonify({'error': f'Ошибка сервера: {str(e)}'}), 500
-
+        return jsonify({'error': f'Критическая ошибка сервера: {str(e)}'}), 500
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
